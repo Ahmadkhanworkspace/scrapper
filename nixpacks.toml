@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["python311", "nodejs-18_x"]
+
+[phases.install]
+cmds = [
+  "pip install -r requirements.txt",
+  "playwright install chromium",
+  "playwright install-deps chromium"
+]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "python admin_panel.py"
+

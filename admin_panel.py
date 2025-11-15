@@ -26,9 +26,22 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'ecommerce-aggregator-admin-secret-key-2024'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///admin_panel.db'
+
+# Get configuration from environment variables (for Railway/production)
+SECRET_KEY = os.getenv('SECRET_KEY', 'ecommerce-aggregator-admin-secret-key-2024')
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///admin_panel.db')
+
+# Convert PostgreSQL URL format if needed (Railway uses postgres://, SQLAlchemy needs postgresql://)
+if DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Production settings
+FLASK_ENV = os.getenv('FLASK_ENV', 'development')
+app.config['DEBUG'] = (FLASK_ENV != 'production')
 
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -64,7 +77,25 @@ def load_user(user_id):
 
 # Database setup
 def init_db():
-    """Initialize SQLite database for admin panel"""
+    """Initialize database for admin panel (SQLite for local, PostgreSQL for production)"""
+    # Use PostgreSQL if DATABASE_URL is provided, otherwise SQLite
+    if DATABASE_URL.startswith('postgresql://') or DATABASE_URL.startswith('postgres://'):
+        # PostgreSQL - initialize tables using init_postgres.py
+        logger.info("Using PostgreSQL database")
+        try:
+            import subprocess
+            result = subprocess.run(['python', 'init_postgres.py'], 
+                                  capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                logger.info("✅ PostgreSQL database initialized")
+            else:
+                logger.warning(f"PostgreSQL init script output: {result.stdout}")
+        except Exception as e:
+            logger.warning(f"Could not run PostgreSQL init script: {e}")
+            logger.info("Tables may need to be created manually")
+        return
+    
+    # SQLite for local development
     conn = sqlite3.connect('admin_panel.db')
     cursor = conn.cursor()
     
@@ -1828,6 +1859,17 @@ def sync_product_to_botble(product):
             'message': str(e)
         }
 
+def install_playwright_browsers():
+    """Install Playwright browsers if not already installed"""
+    try:
+        from playwright.sync_api import sync_playwright
+        logger.info("✅ Playwright browsers already available")
+    except Exception:
+        logger.info("📦 Installing Playwright browsers...")
+        import subprocess
+        subprocess.run(['playwright', 'install', 'chromium'], check=True)
+        logger.info("✅ Playwright browsers installed")
+
 if __name__ == '__main__':
     # Initialize database
     init_db()
@@ -1837,9 +1879,18 @@ if __name__ == '__main__':
     os.makedirs('static/css', exist_ok=True)
     os.makedirs('static/js', exist_ok=True)
     
+    # Install Playwright browsers if needed (for Railway)
+    if FLASK_ENV == 'production':
+        install_playwright_browsers()
+    
+    # Get port from environment variable (Railway sets this)
+    port = int(os.getenv('PORT', 5000))
+    
     logger.info("🚀 Starting Unified E-commerce Product Data Aggregator Admin Panel")
+    logger.info(f"🌍 Environment: {FLASK_ENV}")
+    logger.info(f"🔑 Database: {'PostgreSQL' if DATABASE_URL.startswith('postgresql://') else 'SQLite'}")
     logger.info("👤 Admin Login: admin / admin123")
-    logger.info("🌐 Admin Panel: http://localhost:5000/admin")
+    logger.info(f"🌐 Admin Panel: http://0.0.0.0:{port}/admin")
     
     # Run the Flask app with SocketIO
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=app.config['DEBUG'], host='0.0.0.0', port=port)
