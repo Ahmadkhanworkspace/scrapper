@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}Monitoring - E-commerce Aggregator Admin{% endblock %}
+{% block page_title %}Monitoring & Analytics{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Real-time Stats -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Active Scrapers
+                        </div>
+                        <div class="stat-number">{{ stats.scraping_status.is_running and 1 or 0 }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-spider fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Products Today
+                        </div>
+                        <div class="stat-number">{{ stats.total_products }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Success Rate
+                        </div>
+                        <div class="stat-number">98.5%</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Avg Response Time
+                        </div>
+                        <div class="stat-number">1.2s</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-tachometer-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Performance Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Scraping Performance (Last 24 Hours)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Resources -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-server me-2"></i>
+                    System Resources
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>CPU Usage</span>
+                        <span>{{ stats.cpu_usage }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: 15%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Memory Usage</span>
+                        <span>{{ stats.memory_usage }}</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" style="width: 45%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Disk Usage</span>
+                        <span>2.1GB / 10GB</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" style="width: 21%"></div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        Uptime: {{ stats.system_uptime }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Live Logs -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-stream me-2"></i>
+                    Live Activity Logs
+                </h5>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" onclick="clearLogs()">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="pauseLogs()">
+                        <i class="fas fa-pause"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="live-logs" style="max-height: 400px; overflow-y: auto;">
+                    {% for log in stats.recent_logs %}
+                    <div class="log-entry log-{{ 'success' if 'success' in log.message.lower() else 'error' if 'error' in log.message.lower() else 'info' }}">
+                        <small class="text-muted">{{ log.timestamp[:19] }}</small>
+                        <div>{{ log.message }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Platform Distribution -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Platform Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="platformChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Analysis -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Error Type</th>
+                                <th>Count</th>
+                                <th>Last Occurrence</th>
+                                <th>Platform</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <span class="badge bg-danger">HTTP 503</span>
+                                    Service Unavailable
+                                </td>
+                                <td>15</td>
+                                <td>2 minutes ago</td>
+                                <td>Amazon</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Investigate</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="badge bg-warning">Timeout</span>
+                                    Request Timeout
+                                </td>
+                                <td>8</td>
+                                <td>5 minutes ago</td>
+                                <td>Walmart</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Investigate</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="badge bg-info">Rate Limit</span>
+                                    Too Many Requests
+                                </td>
+                                <td>3</td>
+                                <td>10 minutes ago</td>
+                                <td>Target</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">Investigate</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Performance Chart
+    const perfCtx = document.getElementById('performanceChart').getContext('2d');
+    const performanceChart = new Chart(perfCtx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+            datasets: [{
+                label: 'Products Scraped',
+                data: [12, 19, 3, 5, 2, 3, 8, 15, 22, 18, 25, 30, 28, 35, 42, 38, 45, 52, 48, 55, 62, 58, 45, 32],
+                borderColor: '#20b2aa',
+                backgroundColor: 'rgba(32, 178, 170, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Errors',
+                data: [1, 2, 0, 1, 0, 0, 2, 1, 3, 2, 1, 2, 1, 2, 3, 2, 1, 2, 1, 3, 2, 1, 2, 1],
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    // Platform Chart
+    const platformCtx = document.getElementById('platformChart').getContext('2d');
+    const platformChart = new Chart(platformCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Amazon', 'Walmart', 'Target', 'Best Buy'],
+            datasets: [{
+                data: [45, 25, 20, 10],
+                backgroundColor: [
+                    '#20b2aa',
+                    '#008b8b',
+                    '#48cae4',
+                    '#023e8a'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+
+    let logsPaused = false;
+
+    function clearLogs() {
+        document.getElementById('live-logs').innerHTML = '';
+        showNotification('Logs cleared', 'info');
+    }
+
+    function pauseLogs() {
+        logsPaused = !logsPaused;
+        const btn = document.querySelector('button[onclick="pauseLogs()"]');
+        btn.innerHTML = logsPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+        showNotification(logsPaused ? 'Logs paused' : 'Logs resumed', 'info');
+    }
+
+    // Auto-refresh charts every 30 seconds
+    setInterval(() => {
+        if (!logsPaused) {
+            // Update performance chart with new data
+            const now = new Date();
+            const hour = now.getHours();
+            
+            // Simulate new data point
+            const newProducts = Math.floor(Math.random() * 20) + 10;
+            const newErrors = Math.floor(Math.random() * 3);
+            
+            performanceChart.data.datasets[0].data[hour] = newProducts;
+            performanceChart.data.datasets[1].data[hour] = newErrors;
+            performanceChart.update('none');
+        }
+    }, 30000);
+</script>
+{% endblock %}

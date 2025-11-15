@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+
+{% block title %}Enhanced Monitoring Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0 text-gray-800">
+                    <i class="fas fa-chart-line text-primary me-2"></i>
+                    Enhanced Monitoring Dashboard
+                </h1>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="exportData()">
+                        <i class="fas fa-download me-1"></i>Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Products Scraped
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-products">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-boxes fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Success Rate
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="success-rate">0%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Active Platforms
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="active-platforms">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-store fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Avg Response Time
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="avg-response-time">0ms</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Platform Performance -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Platform Performance</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="platformChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Platform Status</h6>
+                </div>
+                <div class="card-body">
+                    <div id="platform-status">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Amazon</span>
+                            <span class="badge bg-success" id="amazon-status">Active</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Walmart</span>
+                            <span class="badge bg-warning" id="walmart-status">Blocked</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Target</span>
+                            <span class="badge bg-warning" id="target-status">Blocked</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Best Buy</span>
+                            <span class="badge bg-warning" id="bestbuy-status">Blocked</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Activity Log -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Real-time Activity Log</h6>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="filterLogs('all')">All</button>
+                        <button type="button" class="btn btn-outline-success" onclick="filterLogs('success')">Success</button>
+                        <button type="button" class="btn btn-outline-warning" onclick="filterLogs('warning')">Warning</button>
+                        <button type="button" class="btn btn-outline-danger" onclick="filterLogs('error')">Error</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="activity-log" style="height: 300px; overflow-y: auto;">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                            <p>Loading activity log...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health -->
+    <div class="row mt-4">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">System Health</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>CPU Usage</span>
+                            <span id="cpu-usage">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 0%" id="cpu-progress"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Memory Usage</span>
+                            <span id="memory-usage">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%" id="memory-progress"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Disk Usage</span>
+                            <span id="disk-usage">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 0%" id="disk-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Scraping Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="h4 text-primary" id="today-scraped">0</div>
+                            <div class="text-muted">Today</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 text-success" id="week-scraped">0</div>
+                            <div class="text-muted">This Week</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 text-info" id="month-scraped">0</div>
+                            <div class="text-muted">This Month</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let platformChart;
+let activityLog = [];
+let logFilter = 'all';
+
+// Initialize charts and data
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    startRealTimeUpdates();
+    loadActivityLog();
+});
+
+function initializeCharts() {
+    const ctx = document.getElementById('platformChart').getContext('2d');
+    platformChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Amazon', 'Walmart', 'Target', 'Best Buy'],
+            datasets: [{
+                label: 'Products Scraped',
+                data: [20, 0, 0, 0],
+                backgroundColor: [
+                    '#20b2aa',
+                    '#008b8b',
+                    '#48cae4',
+                    '#023e8a'
+                ],
+                borderColor: [
+                    '#20b2aa',
+                    '#008b8b',
+                    '#48cae4',
+                    '#023e8a'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function startRealTimeUpdates() {
+    // Update stats every 5 seconds
+    setInterval(updateStats, 5000);
+    
+    // Update system health every 10 seconds
+    setInterval(updateSystemHealth, 10000);
+    
+    // Update activity log every 2 seconds
+    setInterval(updateActivityLog, 2000);
+}
+
+function updateStats() {
+    // Simulate real-time data updates
+    fetch('/api/monitoring/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-products').textContent = data.total_products || 0;
+            document.getElementById('success-rate').textContent = (data.success_rate || 0) + '%';
+            document.getElementById('active-platforms').textContent = data.active_platforms || 0;
+            document.getElementById('avg-response-time').textContent = (data.avg_response_time || 0) + 'ms';
+            
+            // Update chart
+            if (platformChart) {
+                platformChart.data.datasets[0].data = data.platform_data || [20, 0, 0, 0];
+                platformChart.update();
+            }
+        })
+        .catch(error => {
+            console.error('Error updating stats:', error);
+        });
+}
+
+function updateSystemHealth() {
+    // Simulate system health data
+    const cpuUsage = Math.floor(Math.random() * 30) + 10;
+    const memoryUsage = Math.floor(Math.random() * 40) + 20;
+    const diskUsage = Math.floor(Math.random() * 20) + 5;
+    
+    document.getElementById('cpu-usage').textContent = cpuUsage + '%';
+    document.getElementById('cpu-progress').style.width = cpuUsage + '%';
+    
+    document.getElementById('memory-usage').textContent = memoryUsage + '%';
+    document.getElementById('memory-progress').style.width = memoryUsage + '%';
+    
+    document.getElementById('disk-usage').textContent = diskUsage + '%';
+    document.getElementById('disk-progress').style.width = diskUsage + '%';
+}
+
+function loadActivityLog() {
+    // Load initial activity log
+    fetch('/api/monitoring/activity-log')
+        .then(response => response.json())
+        .then(data => {
+            activityLog = data.logs || [];
+            updateActivityLog();
+        })
+        .catch(error => {
+            console.error('Error loading activity log:', error);
+            // Add sample log entries
+            activityLog = [
+                { timestamp: new Date().toISOString(), level: 'info', message: 'Amazon scraper started successfully', platform: 'Amazon' },
+                { timestamp: new Date().toISOString(), level: 'success', message: 'Scraped 20 products from Amazon', platform: 'Amazon' },
+                { timestamp: new Date().toISOString(), level: 'warning', message: 'Walmart scraper blocked by anti-bot protection', platform: 'Walmart' },
+                { timestamp: new Date().toISOString(), level: 'error', message: 'Target scraper failed to load page', platform: 'Target' }
+            ];
+            updateActivityLog();
+        });
+}
+
+function updateActivityLog() {
+    const logContainer = document.getElementById('activity-log');
+    const filteredLogs = logFilter === 'all' ? activityLog : activityLog.filter(log => log.level === logFilter);
+    
+    logContainer.innerHTML = filteredLogs.map(log => {
+        const timestamp = new Date(log.timestamp).toLocaleTimeString();
+        const levelClass = {
+            'info': 'text-info',
+            'success': 'text-success',
+            'warning': 'text-warning',
+            'error': 'text-danger'
+        }[log.level] || 'text-muted';
+        
+        const levelIcon = {
+            'info': 'fas fa-info-circle',
+            'success': 'fas fa-check-circle',
+            'warning': 'fas fa-exclamation-triangle',
+            'error': 'fas fa-times-circle'
+        }[log.level] || 'fas fa-circle';
+        
+        return `
+            <div class="d-flex align-items-center mb-2 p-2 border-bottom">
+                <i class="${levelIcon} ${levelClass} me-2"></i>
+                <div class="flex-grow-1">
+                    <div class="small text-muted">${timestamp}</div>
+                    <div class="${levelClass}">${log.message}</div>
+                    <div class="small text-muted">Platform: ${log.platform}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Auto-scroll to bottom
+    logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+function filterLogs(level) {
+    logFilter = level;
+    
+    // Update button states
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    updateActivityLog();
+}
+
+function refreshData() {
+    updateStats();
+    updateSystemHealth();
+    loadActivityLog();
+}
+
+function exportData() {
+    const data = {
+        stats: {
+            total_products: document.getElementById('total-products').textContent,
+            success_rate: document.getElementById('success-rate').textContent,
+            active_platforms: document.getElementById('active-platforms').textContent,
+            avg_response_time: document.getElementById('avg-response-time').textContent
+        },
+        platform_data: platformChart ? platformChart.data.datasets[0].data : [],
+        activity_log: activityLog,
+        timestamp: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `monitoring-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}
+

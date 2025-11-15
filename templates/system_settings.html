@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - E-commerce Aggregator Admin{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>
+                    General Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="min_rating" class="form-label">
+                                <i class="fas fa-star me-1"></i>
+                                Minimum Rating
+                            </label>
+                            {{ form.min_rating(class="form-control") }}
+                            {% if form.min_rating.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.min_rating.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Minimum product rating for curation (0.0 - 5.0)</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="min_review_count" class="form-label">
+                                <i class="fas fa-comments me-1"></i>
+                                Minimum Review Count
+                            </label>
+                            {{ form.min_review_count(class="form-control") }}
+                            {% if form.min_review_count.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.min_review_count.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Minimum number of reviews required</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="max_concurrent_scrapers" class="form-label">
+                                <i class="fas fa-tasks me-1"></i>
+                                Max Concurrent Scrapers
+                            </label>
+                            {{ form.max_concurrent_scrapers(class="form-control") }}
+                            {% if form.max_concurrent_scrapers.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.max_concurrent_scrapers.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Maximum number of scrapers running simultaneously</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="default_delay" class="form-label">
+                                <i class="fas fa-clock me-1"></i>
+                                Default Delay (seconds)
+                            </label>
+                            {{ form.default_delay(class="form-control") }}
+                            {% if form.default_delay.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.default_delay.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Default delay between requests</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="max_retries" class="form-label">
+                                <i class="fas fa-redo me-1"></i>
+                                Max Retries
+                            </label>
+                            {{ form.max_retries(class="form-control") }}
+                            {% if form.max_retries.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.max_retries.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Maximum retry attempts for failed requests</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="data_retention_days" class="form-label">
+                                <i class="fas fa-database me-1"></i>
+                                Data Retention (days)
+                            </label>
+                            {{ form.data_retention_days(class="form-control") }}
+                            {% if form.data_retention_days.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.data_retention_days.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">How long to keep scraped data</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="notification_email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>
+                                Notification Email
+                            </label>
+                            {{ form.notification_email(class="form-control") }}
+                            {% if form.notification_email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.notification_email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Email address for system notifications</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- System Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-heartbeat me-2"></i>
+                    System Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Database</span>
+                        <span class="badge bg-success">Connected</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Scraping Engine</span>
+                        <span class="badge bg-success">Running</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Scheduler</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Web Interface</span>
+                        <span class="badge bg-success">Online</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="clearCache()">
+                        <i class="fas fa-trash me-1"></i>
+                        Clear Cache
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="restartServices()">
+                        <i class="fas fa-redo me-1"></i>
+                        Restart Services
+                    </button>
+                    <button class="btn btn-outline-info" onclick="exportSettings()">
+                        <i class="fas fa-download me-1"></i>
+                        Export Settings
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="importSettings()">
+                        <i class="fas fa-upload me-1"></i>
+                        Import Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function clearCache() {
+        if (confirm('Are you sure you want to clear the cache?')) {
+            fetch('/api/system/clear-cache', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                } else {
+                    showNotification(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error clearing cache', 'error');
+            });
+        }
+    }
+
+    function restartServices() {
+        if (confirm('Are you sure you want to restart all services?')) {
+            fetch('/api/system/restart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                } else {
+                    showNotification(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error restarting services', 'error');
+            });
+        }
+    }
+
+    function exportSettings() {
+        fetch('/api/system/export-settings')
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'settings.json';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error exporting settings', 'error');
+        });
+    }
+
+    function importSettings() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/api/system/import-settings', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification(data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error importing settings', 'error');
+                });
+            }
+        };
+        input.click();
+    }
+</script>
+{% endblock %}
+
+

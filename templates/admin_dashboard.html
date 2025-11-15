@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - E-commerce Aggregator Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistics Cards -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Total Users
+                        </div>
+                        <div class="stat-number">{{ stats.total_users }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Scraper Configs
+                        </div>
+                        <div class="stat-number">{{ stats.total_configs }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-spider fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Products Scraped
+                        </div>
+                        <div class="stat-number">{{ stats.scraped_products }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-uppercase mb-1">
+                            Completed Sessions
+                        </div>
+                        <div class="stat-number">{{ stats.completed_sessions }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Scraping Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-play-circle me-2"></i>
+                    Scraping Status
+                </h5>
+                <span id="scraping-status" class="status-badge status-idle">
+                    {% if stats.is_scraping %}Running{% else %}Stopped{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="progress-ring me-3">
+                                <svg class="progress-ring" width="60" height="60">
+                                    <circle class="progress-ring-bg" cx="30" cy="30" r="25"></circle>
+                                    <circle class="progress-ring-circle" cx="30" cy="30" r="25" 
+                                            stroke-dasharray="157" stroke-dashoffset="157"></circle>
+                                </svg>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Current Session</h6>
+                                <small class="text-muted" id="scraping-progress">No active session</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-center">
+                            <h6>Quick Actions</h6>
+                            <div class="btn-group-vertical w-100">
+                                <button class="btn btn-success btn-sm mb-2" onclick="startScraping()">
+                                    <i class="fas fa-play me-1"></i>
+                                    Start Scraping
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="stopScraping()">
+                                    <i class="fas fa-stop me-1"></i>
+                                    Stop Scraping
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Configurations -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    Active Configurations
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_configs %}
+                    <div class="list-group list-group-flush">
+                        {% for config in active_configs %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ config.name }}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-globe me-1"></i>
+                                    {{ config.platform.title() }} - {{ config.category.title() }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary me-2">{{ config.max_pages }} pages</span>
+                                <button class="btn btn-outline-primary btn-sm" 
+                                        onclick="startConfigScraping({{ config.id }})">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-cog fa-3x mb-3"></i>
+                        <p>No active configurations</p>
+                        <a href="{{ url_for('new_scraper_config') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>
+                            Create Configuration
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Scraping Logs -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Scraping Sessions
+                </h5>
+                <a href="{{ url_for('monitoring') }}" class="btn btn-outline-primary btn-sm">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_logs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Session ID</th>
+                                    <th>Platform</th>
+                                    <th>Status</th>
+                                    <th>Products</th>
+                                    <th>Sample Results</th>
+                                    <th>Errors</th>
+                                    <th>Duration</th>
+                                    <th>Started</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td>
+                                        <code>{{ log.session_id[:8] }}...</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ log.platform.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if log.status == 'completed' else 'warning' if log.status == 'running' else 'danger' }}">
+                                            {{ log.status.title() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ log.products_scraped }}</td>
+                                    <td>
+                                        {% if log.sample_products %}
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {% for product in log.sample_products[:2] %}
+                                                    <span class="badge bg-light text-dark" title="{{ product.title }}">
+                                                        {{ product.title[:20] }}... - ${{ product.price }}
+                                                    </span>
+                                                {% endfor %}
+                                                {% if log.sample_products|length > 2 %}
+                                                    <span class="badge bg-secondary">+{{ log.sample_products|length - 2 }} more</span>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">No results</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.errors > 0 %}
+                                            <span class="text-danger">{{ log.errors }}</span>
+                                        {% else %}
+                                            <span class="text-success">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.end_time and log.start_time %}
+                                            {% set start_dt = log.start_time | to_datetime %}
+                                            {% set end_dt = log.end_time | to_datetime %}
+                                            {% if start_dt and end_dt %}
+                                                {{ ((end_dt - start_dt).total_seconds()) | round(1) }}s
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ log.start_time[:19] if log.start_time else '-' }}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-history fa-3x mb-3"></i>
+                        <p>No scraping sessions yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Logs -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-stream me-2"></i>
+                    Live Logs
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="scraping-logs" style="max-height: 400px; overflow-y: auto;">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-stream fa-2x mb-2"></i>
+                        <p class="mb-0">No live logs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Chart -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Scraping Activity (Last 7 Days)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="activityChart" width="400" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Activity Chart
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    const activityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Products Scraped',
+                data: [12, 19, 3, 5, 2, 3, 8],
+                borderColor: '#20b2aa',
+                backgroundColor: 'rgba(32, 178, 170, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Scraping Sessions',
+                data: [2, 3, 1, 2, 1, 1, 2],
+                borderColor: '#008b8b',
+                backgroundColor: 'rgba(0, 139, 139, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    // Scraping functions
+    function startScraping() {
+        fetch('/api/start-scraping', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                config_id: 1 // Default config
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error, 'error');
+            } else {
+                showNotification(data.message, 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error starting scraping', 'error');
+        });
+    }
+
+    function stopScraping() {
+        fetch('/api/stop-scraping', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            showNotification(data.message, 'info');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error stopping scraping', 'error');
+        });
+    }
+
+    function startConfigScraping(configId) {
+        fetch('/api/start-scraping', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                config_id: configId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error, 'error');
+            } else {
+                showNotification(data.message, 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error starting scraping', 'error');
+        });
+    }
+
+    // Update progress ring
+    function updateProgressRing(percentage) {
+        const circle = document.querySelector('.progress-ring-circle');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        
+        circle.style.strokeDasharray = circumference;
+        circle.style.strokeDashoffset = circumference - (percentage / 100) * circumference;
+    }
+</script>
+{% endblock %}

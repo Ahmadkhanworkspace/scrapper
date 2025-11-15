@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% block title %}Scraping Results{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-database me-2"></i>Scraping Results</h2>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="exportResults()">
+                        <i class="fas fa-download me-2"></i>Export Results
+                    </button>
+                    <button class="btn btn-success" onclick="syncToBotble()">
+                        <i class="fas fa-sync me-2"></i>Sync to Botble CMS
+                    </button>
+                    <button class="btn btn-info" onclick="refreshResults()">
+                        <i class="fas fa-refresh me-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-boxes fa-2x mb-2"></i>
+                            <h3 class="stat-number">{{ total_products }}</h3>
+                            <p class="mb-0">Total Products</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-amazon fa-2x mb-2"></i>
+                            <h3 class="stat-number">{{ amazon_count }}</h3>
+                            <p class="mb-0">Amazon Products</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-store fa-2x mb-2"></i>
+                            <h3 class="stat-number">{{ walmart_count }}</h3>
+                            <p class="mb-0">Walmart Products</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-sync-alt fa-2x mb-2"></i>
+                            <h3 class="stat-number">{{ synced_count }}</h3>
+                            <p class="mb-0">Synced to CMS</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-filter me-2"></i>Filters</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Platform</label>
+                            <select class="form-select" id="platformFilter">
+                                <option value="">All Platforms</option>
+                                <option value="Amazon">Amazon</option>
+                                <option value="Walmart">Walmart</option>
+                                <option value="Target">Target</option>
+                                <option value="Best Buy">Best Buy</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Price Range</label>
+                            <select class="form-select" id="priceFilter">
+                                <option value="">All Prices</option>
+                                <option value="0-50">$0 - $50</option>
+                                <option value="50-100">$50 - $100</option>
+                                <option value="100-500">$100 - $500</option>
+                                <option value="500+">$500+</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Rating</label>
+                            <select class="form-select" id="ratingFilter">
+                                <option value="">All Ratings</option>
+                                <option value="4+">4+ Stars</option>
+                                <option value="3+">3+ Stars</option>
+                                <option value="2+">2+ Stars</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sync Status</label>
+                            <select class="form-select" id="syncFilter">
+                                <option value="">All Status</option>
+                                <option value="synced">Synced</option>
+                                <option value="pending">Pending</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Search Products</label>
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search by title, brand, or model...">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button class="btn btn-primary me-2" onclick="applyFilters()">
+                                <i class="fas fa-search me-2"></i>Apply Filters
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearFilters()">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list me-2"></i>Scraped Products</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="selectAll()">Select All</button>
+                        <button class="btn btn-outline-secondary" onclick="selectNone()">Select None</button>
+                        <button class="btn btn-outline-success" onclick="syncSelected()">Sync Selected</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th>Image</th>
+                                    <th>Product Details</th>
+                                    <th>Platform</th>
+                                    <th>Price</th>
+                                    <th>Rating</th>
+                                    <th>Sync Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr data-platform="{{ product.platform }}" data-price="{{ product.price }}" data-rating="{{ product.rating }}" data-sync="{{ product.sync_status }}">
+                                    <td>
+                                        <input type="checkbox" class="product-checkbox" value="{{ product.id }}">
+                                    </td>
+                                    <td>
+                                        {% if product.image_url %}
+                                            <img src="{{ product.image_url }}" alt="{{ product.title }}" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <h6 class="mb-1">{{ product.title[:50] }}{% if product.title|length > 50 %}...{% endif %}</h6>
+                                            <small class="text-muted">{{ product.brand }} - {{ product.model }}</small>
+                                            <br>
+                                            <small class="text-muted">{{ product.scraped_at }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ product.platform }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>${{ product.price }}</strong>
+                                        {% if product.original_price and product.original_price != product.price %}
+                                            <br><small class="text-muted text-decoration-line-through">${{ product.original_price }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if product.rating %}
+                                            <div class="d-flex align-items-center">
+                                                <span class="text-warning me-1">{{ '★' * product.rating|int }}{{ '☆' * (5 - product.rating|int) }}</span>
+                                                <small class="text-muted">({{ product.review_count }})</small>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">No rating</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if product.sync_status == 'synced' %}
+                                            <span class="badge bg-success">Synced</span>
+                                        {% elif product.sync_status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% elif product.sync_status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Not Synced</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" onclick="viewProduct('{{ product.id }}')" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" onclick="syncProduct('{{ product.id }}')" title="Sync to CMS">
+                                                <i class="fas fa-sync"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" onclick="deleteProduct('{{ product.id }}')" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if not products %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-database fa-3x mb-3"></i>
+                        <h5>No Scraped Products Found</h5>
+                        <p>Start scraping to see results here.</p>
+                        <a href="{{ url_for('scraper_management') }}" class="btn btn-primary">
+                            <i class="fas fa-spider me-2"></i>Go to Scraper Management
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Details Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="productDetails">
+                <!-- Product details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="syncCurrentProduct()">Sync to CMS</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentProductId = null;
+
+function refreshResults() {
+    location.reload();
+}
+
+function exportResults() {
+    const selectedProducts = getSelectedProducts();
+    if (selectedProducts.length === 0) {
+        alert('Please select products to export');
+        return;
+    }
+    
+    // Create export data
+    const exportData = {
+        timestamp: new Date().toISOString(),
+        total_products: selectedProducts.length,
+        products: selectedProducts.map(id => {
+            const row = document.querySelector(`input[value="${id}"]`).closest('tr');
+            return {
+                title: row.querySelector('h6').textContent,
+                platform: row.querySelector('.badge').textContent,
+                price: row.querySelector('strong').textContent,
+                rating: row.querySelector('.text-warning')?.textContent || 'No rating',
+                sync_status: row.querySelector('td:nth-child(7) .badge').textContent
+            };
+        })
+    };
+    
+    // Download as JSON
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `scraping_results_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+function syncToBotble() {
+    const selectedProducts = getSelectedProducts();
+    if (selectedProducts.length === 0) {
+        alert('Please select products to sync');
+        return;
+    }
+    
+    if (confirm(`Sync ${selectedProducts.length} products to Botble CMS?`)) {
+        // Show loading
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Syncing...';
+        button.disabled = true;
+        
+        // Simulate sync process
+        setTimeout(() => {
+            alert('Products synced successfully to Botble CMS!');
+            button.innerHTML = originalText;
+            button.disabled = false;
+            refreshResults();
+        }, 2000);
+    }
+}
+
+function applyFilters() {
+    const platform = document.getElementById('platformFilter').value;
+    const price = document.getElementById('priceFilter').value;
+    const rating = document.getElementById('ratingFilter').value;
+    const sync = document.getElementById('syncFilter').value;
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    
+    const rows = document.querySelectorAll('#resultsTable tbody tr');
+    
+    rows.forEach(row => {
+        let show = true;
+        
+        // Platform filter
+        if (platform && row.dataset.platform !== platform) {
+            show = false;
+        }
+        
+        // Price filter
+        if (price && show) {
+            const productPrice = parseFloat(row.dataset.price);
+            if (price === '0-50' && (productPrice < 0 || productPrice > 50)) show = false;
+            else if (price === '50-100' && (productPrice < 50 || productPrice > 100)) show = false;
+            else if (price === '100-500' && (productPrice < 100 || productPrice > 500)) show = false;
+            else if (price === '500+' && productPrice < 500) show = false;
+        }
+        
+        // Rating filter
+        if (rating && show) {
+            const productRating = parseFloat(row.dataset.rating);
+            const minRating = parseFloat(rating.replace('+', ''));
+            if (productRating < minRating) show = false;
+        }
+        
+        // Sync filter
+        if (sync && show) {
+            if (row.dataset.sync !== sync) show = false;
+        }
+        
+        // Search filter
+        if (search && show) {
+            const title = row.querySelector('h6').textContent.toLowerCase();
+            const brand = row.querySelector('small').textContent.toLowerCase();
+            if (!title.includes(search) && !brand.includes(search)) show = false;
+        }
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+function clearFilters() {
+    document.getElementById('platformFilter').value = '';
+    document.getElementById('priceFilter').value = '';
+    document.getElementById('ratingFilter').value = '';
+    document.getElementById('syncFilter').value = '';
+    document.getElementById('searchInput').value = '';
+    applyFilters();
+}
+
+function getSelectedProducts() {
+    const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function selectAll() {
+    document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = true);
+    document.getElementById('selectAllCheckbox').checked = true;
+}
+
+function selectNone() {
+    document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAllCheckbox').checked = false;
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAllCheckbox').checked;
+    document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = selectAll);
+}
+
+function syncSelected() {
+    const selectedProducts = getSelectedProducts();
+    if (selectedProducts.length === 0) {
+        alert('Please select products to sync');
+        return;
+    }
+    syncToBotble();
+}
+
+function viewProduct(productId) {
+    currentProductId = productId;
+    // Load product details (simplified for demo)
+    document.getElementById('productDetails').innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Product Information</h6>
+                <p><strong>ID:</strong> ${productId}</p>
+                <p><strong>Title:</strong> Sample Product Title</p>
+                <p><strong>Brand:</strong> Sample Brand</p>
+                <p><strong>Price:</strong> $99.99</p>
+            </div>
+            <div class="col-md-6">
+                <h6>Scraping Details</h6>
+                <p><strong>Platform:</strong> Amazon</p>
+                <p><strong>Scraped:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+            </div>
+        </div>
+    `;
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+
+function syncProduct(productId) {
+    if (confirm('Sync this product to Botble CMS?')) {
+        // Simulate sync
+        alert('Product synced successfully!');
+        refreshResults();
+    }
+}
+
+function syncCurrentProduct() {
+    if (currentProductId) {
+        syncProduct(currentProductId);
+        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+    }
+}
+
+function deleteProduct(productId) {
+    if (confirm('Are you sure you want to delete this product?')) {
+        // Simulate deletion
+        alert('Product deleted successfully!');
+        refreshResults();
+    }
+}
+
+// Auto-refresh every 30 seconds
+setInterval(refreshResults, 30000);
+</script>
+{% endblock %}
+

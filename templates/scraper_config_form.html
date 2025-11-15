@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - E-commerce Aggregator Admin{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">
+                                <i class="fas fa-tag me-1"></i>
+                                Configuration Name
+                            </label>
+                            {{ form.name(class="form-control", placeholder="Enter configuration name") }}
+                            {% if form.name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">A descriptive name for this configuration</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="platform" class="form-label">
+                                <i class="fas fa-globe me-1"></i>
+                                Platform
+                            </label>
+                            {{ form.platform(class="form-select") }}
+                            {% if form.platform.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.platform.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Select the e-commerce platform to scrape</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">
+                                <i class="fas fa-tags me-1"></i>
+                                Category
+                            </label>
+                            {{ form.category(class="form-select") }}
+                            {% if form.category.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.category.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Product category to focus on</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="max_pages" class="form-label">
+                                <i class="fas fa-file-alt me-1"></i>
+                                Maximum Pages
+                            </label>
+                            {{ form.max_pages(class="form-control", placeholder="10") }}
+                            {% if form.max_pages.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.max_pages.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Maximum number of pages to scrape (1-100)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="delay_min" class="form-label">
+                                <i class="fas fa-clock me-1"></i>
+                                Minimum Delay (seconds)
+                            </label>
+                            {{ form.delay_min(class="form-control", placeholder="1") }}
+                            {% if form.delay_min.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.delay_min.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Minimum delay between requests</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="delay_max" class="form-label">
+                                <i class="fas fa-clock me-1"></i>
+                                Maximum Delay (seconds)
+                            </label>
+                            {{ form.delay_max(class="form-control", placeholder="2") }}
+                            {% if form.delay_max.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.delay_max.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Maximum delay between requests</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                {{ form.enabled(class="form-check-input") }}
+                                <label class="form-check-label" for="enabled">
+                                    <i class="fas fa-toggle-on me-1"></i>
+                                    Enable this configuration
+                                </label>
+                            </div>
+                            <div class="form-text">Enable or disable this scraper configuration</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Platform-specific settings -->
+                    <div class="card mt-4" id="platform-settings">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-cogs me-2"></i>
+                                Platform-Specific Settings
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="amazon-settings" class="platform-settings" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Search Keywords</label>
+                                        <input type="text" class="form-control" placeholder="e.g., smartphone, laptop">
+                                        <div class="form-text">Keywords to search for on Amazon</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Price Range</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" placeholder="Min">
+                                            <span class="input-group-text">to</span>
+                                            <input type="number" class="form-control" placeholder="Max">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="walmart-settings" class="platform-settings" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Store Location</label>
+                                        <select class="form-select">
+                                            <option>United States</option>
+                                            <option>Canada</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Sort By</label>
+                                        <select class="form-select">
+                                            <option>Best Match</option>
+                                            <option>Price: Low to High</option>
+                                            <option>Price: High to Low</option>
+                                            <option>Customer Rating</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="target-settings" class="platform-settings" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Department</label>
+                                        <select class="form-select">
+                                            <option>Electronics</option>
+                                            <option>Home</option>
+                                            <option>Fashion</option>
+                                            <option>Beauty</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Availability</label>
+                                        <select class="form-select">
+                                            <option>All Items</option>
+                                            <option>In Stock Only</option>
+                                            <option>Online Only</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="bestbuy-settings" class="platform-settings" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Brand Filter</label>
+                                        <input type="text" class="form-control" placeholder="e.g., Apple, Samsung">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Store Pickup</label>
+                                        <select class="form-select">
+                                            <option>Any</option>
+                                            <option>Available for Pickup</option>
+                                            <option>Not Available for Pickup</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Settings -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-sliders-h me-2"></i>
+                                Advanced Settings
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Concurrent Requests</label>
+                                    <input type="number" class="form-control" value="16" min="1" max="32">
+                                    <div class="form-text">Number of concurrent requests (1-32)</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Retry Attempts</label>
+                                    <input type="number" class="form-control" value="3" min="0" max="10">
+                                    <div class="form-text">Number of retry attempts for failed requests</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">User Agent</label>
+                                    <select class="form-select">
+                                        <option>Random</option>
+                                        <option>Chrome</option>
+                                        <option>Firefox</option>
+                                        <option>Safari</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Proxy Usage</label>
+                                    <select class="form-select">
+                                        <option>Disabled</option>
+                                        <option>ScraperAPI</option>
+                                        <option>Custom Proxy</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('scraper_management') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Cancel
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary me-2" onclick="testConfiguration()">
+                                <i class="fas fa-play me-1"></i>
+                                Test Configuration
+                            </button>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide platform-specific settings
+    document.getElementById('platform').addEventListener('change', function() {
+        const platform = this.value;
+        const settings = document.querySelectorAll('.platform-settings');
+        
+        // Hide all settings
+        settings.forEach(setting => {
+            setting.style.display = 'none';
+        });
+        
+        // Show selected platform settings
+        const selectedSetting = document.getElementById(platform + '-settings');
+        if (selectedSetting) {
+            selectedSetting.style.display = 'block';
+        }
+    });
+    
+    // Initialize platform settings on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const platformSelect = document.getElementById('platform');
+        if (platformSelect.value) {
+            platformSelect.dispatchEvent(new Event('change'));
+        }
+    });
+    
+    // Test configuration
+    function testConfiguration() {
+        const formData = new FormData(document.querySelector('form'));
+        const configData = Object.fromEntries(formData.entries());
+        
+        // Show loading state
+        const testBtn = document.querySelector('button[onclick="testConfiguration()"]');
+        const originalText = testBtn.innerHTML;
+        testBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Testing...';
+        testBtn.disabled = true;
+        
+        // Simulate test (replace with actual API call)
+        setTimeout(() => {
+            showNotification('Configuration test completed successfully!', 'success');
+            testBtn.innerHTML = originalText;
+            testBtn.disabled = false;
+        }, 2000);
+    }
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const maxPages = parseInt(document.getElementById('max_pages').value);
+        const delayMin = parseInt(document.getElementById('delay_min').value);
+        const delayMax = parseInt(document.getElementById('delay_max').value);
+        
+        if (delayMin >= delayMax) {
+            e.preventDefault();
+            showNotification('Maximum delay must be greater than minimum delay', 'error');
+            return false;
+        }
+        
+        if (maxPages < 1 || maxPages > 100) {
+            e.preventDefault();
+            showNotification('Maximum pages must be between 1 and 100', 'error');
+            return false;
+        }
+    });
+</script>
+{% endblock %}
+
+
