@@ -6,7 +6,7 @@ Amazon Scraper is an open-source project that aims to **scrape data from Amazon*
 To use Amazon Scraper, you will need to have Scrapy and Python installed on your machine.
 To install the project, follow these steps:
 
-+ **Clone the repository**: ```git clone https://github.com/aqstoria/Amazon-Scraper.git```
++ **Clone the repository**: ```git clone https://github.com/Ahmadkhanworkspace/scrapper.git```
 + **Install the dependencies**: ```pip install -r requirements.txt```
 + **Run the project**:
 	+ Using the **bash script** (easy): 
